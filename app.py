@@ -15,9 +15,8 @@ def get_yt_video_id(url):
 
 @app.route('/')
 def home():
-    return jsonify({"status": "API is live and working!"})
+    return jsonify({"status": "All-in-One Media Downloader API is live!"})
 
-# Video & Reel Downloader + Metadata Endpoint
 @app.route('/api/fetch-info', methods=['POST'])
 def fetch_info():
     data = request.json
@@ -26,7 +25,7 @@ def fetch_info():
     if not url:
         return jsonify({"error": "URL required hai"}), 400
 
-    # YouTube aur Instagram ke liye behtar options
+    # Universal options for YouTube, TikTok, FB, Insta, Twitter, etc.
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
@@ -42,7 +41,6 @@ def fetch_info():
             formats = []
             if 'formats' in info:
                 for f in info.get('formats', []):
-                    # Sirf wese formats lein jisme video aur audio dono hon ya achi quality ho
                     if f.get('ext') == 'mp4' and f.get('vcodec') != 'none':
                         formats.append({
                             'format_id': f.get('format_id'),
@@ -51,22 +49,21 @@ def fetch_info():
                         })
 
             response_data = {
-                "title": info.get('title'),
-                "description": info.get('description'),
-                "thumbnail": info.get('thumbnail'),
-                "uploader": info.get('uploader') or info.get('uploader_id'),
+                "title": info.get('title') or "Media Title",
+                "description": info.get('description') or "",
+                "thumbnail": info.get('thumbnail') or "",
+                "uploader": info.get('uploader') or info.get('uploader_id') or "Unknown",
                 "duration": info.get('duration'),
                 "view_count": info.get('view_count'),
                 "tags": info.get('tags', []),
                 "direct_download_url": info.get('url'),
-                "formats": formats[-5:] if formats else [] # Last top formats
+                "formats": formats[-5:] if formats else []
             }
             return jsonify({"success": True, "data": response_data})
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-# YouTube Transcript Generator Endpoint
 @app.route('/api/transcript', methods=['POST'])
 def get_transcript():
     data = request.json
