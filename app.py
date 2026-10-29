@@ -15,7 +15,7 @@ def get_yt_video_id(url):
 
 @app.route('/')
 def home():
-    return jsonify({"status": "All-in-One Media Downloader API is live!"})
+    return jsonify({"status": "API is live and working!"})
 
 @app.route('/api/fetch-info', methods=['POST'])
 def fetch_info():
@@ -23,15 +23,21 @@ def fetch_info():
     url = data.get('url')
     
     if not url:
-        return jsonify({"error": "URL required hai"}), 400
+        return jsonify({"success": False, "error": "URL required hai"}), 400
 
-    # 'best[ext=mp4]/best' use karne se Facebook aur YouTube par video ke sath audio bhi lazmi milegi
+    # Threads ya doosre links se unnecessary tracking parameters saaf karna
+    if "threads.net" in url:
+        url = url.split('?')[0]  # Query parameters hata deta hai
+
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
         'format': 'best[ext=mp4]/best',
         'noplaylist': True,
-        'extractor_args': {'youtube': {'player_client': ['ios', 'mweb', 'web']}}
+        'socket_timeout': 15,  # Timeout control karne ke liye
+        'extractor_args': {
+            'youtube': {'player_client': ['android', 'web']}
+        }
     }
 
     try:
@@ -41,7 +47,7 @@ def fetch_info():
             formats = []
             if 'formats' in info:
                 for f in info.get('formats', []):
-                    if f.get('ext') == 'mp4' and f.get('vcodec') != 'none' and f.get('acodec') != 'none':
+                    if f.get('ext') == 'mp4' and f.get('vcodec') != 'none':
                         formats.append({
                             'format_id': f.get('format_id'),
                             'resolution': f.get('format_note') or f.get('resolution') or f"{f.get('height')}p",
@@ -62,7 +68,8 @@ def fetch_info():
             return jsonify({"success": True, "data": response_data})
 
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        # Server crash hone ki bajaye ab sahi error message return hoga
+        return jsonify({"success": False, "error": str(e)}), 200
 
 @app.route('/api/transcript', methods=['POST'])
 def get_transcript():
@@ -71,18 +78,18 @@ def get_transcript():
     
     video_id = get_yt_video_id(url) if url else None
     if not video_id:
-        return jsonify({"error": "Valid YouTube Video URL required hai"}), 400
+        return jsonify({"success": False, "error": "Valid YouTube Video URL required hai"}), 400
 
     try:
         transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
         full_text = " ".join([item['text'] for item in transcript_list])
         return jsonify({"success": True, "transcript": full_text})
     except TranscriptsDisabled:
-        return jsonify({"success": False, "error": "Is video par transcript/subtitles disabled hain."}), 400
+        return jsonify({"success": False, "error": "Is video par transcript/subtitles disabled hain."}), 200
     except NoTranscriptFound:
-        return jsonify({"success": False, "error": "Is video ki koi transcript nahi mili."}), 400
+        return jsonify({"success": False, "error": "Is video ki koi transcript nahi mili."}), 200
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": str(e)}), 200
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
