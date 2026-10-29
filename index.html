@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="A private workspace for permitted YouTube and Instagram media, metadata and transcripts."><title>Media Workbench</title><link rel="stylesheet" href="/static/style.css"><script src="/static/app.js" defer></script></head>
+<body>
+<header class="nav"><a class="brand" href="/" aria-label="Media Workbench home"><span class="logo" aria-hidden="true">M</span>Media Workbench</a><span class="nav-note">Your content. Your toolkit.</span></header>
+<main>
+<section class="hero"><p class="eyebrow">YOUTUBE + INSTAGRAM</p><h1>One link.<br>A little more possibility.</h1><p class="intro">Save permitted media, pull out the details, and turn speech into something you can use.</p></section>
+<section class="workspace" aria-labelledby="workspace-title">
+<div class="section-head"><h2 id="workspace-title">Start with a link</h2><span class="tag">Private by default</span></div>
+<form id="form">
+<label for="url">YouTube video, Short, Instagram post, Reel or story</label>
+<input id="url" name="url" type="url" placeholder="https://www.youtube.com/watch?v=…" required maxlength="2048" autocomplete="off">
+<div class="form-grid"><div><label for="action">What would you like to do?</label><select id="action" name="action"><option value="metadata">Extract metadata · JSON</option><option value="video">Download video · up to 720p on YouTube</option><option value="images">Download images / thumbnail</option><option value="transcript">YouTube captions · transcript</option><option value="audio_transcript">Audio transcript · optional paid AI</option><option value="seo">Generate title, description & tags · AI</option></select></div><div><label for="language">Transcript / AI language</label><select id="language" name="language"><option value="en">English</option><option value="ur">Urdu</option><option value="hi">Hindi</option><option value="ar">Arabic</option></select></div></div>
+<details id="access"><summary>Site access key</summary><div class="access-row"><label for="token">Set by the site owner, not your platform password</label><input id="token" type="password" placeholder="Enter site access key" autocomplete="off"><button type="button" id="forget" class="quiet">Forget key</button></div></details>
+<label class="check"><input type="checkbox" id="rights" required><span>I own this content or have permission to download and process it.</span></label>
+<div class="submit-row"><button type="submit" id="submit">Process link <span aria-hidden="true">↗</span></button><span id="limits" class="muted">Short, permitted media works best.</span></div>
+</form>
+<div id="status" class="status" role="status" aria-live="polite" hidden></div>
+</section>
+<section id="results" class="workspace results" aria-labelledby="result-title" hidden><div class="section-head"><h2 id="result-title">Your result</h2><button id="copy" type="button" class="quiet">Copy result</button></div><p id="result-summary" class="muted"></p><div id="files" class="files"></div><pre id="output" tabindex="0"></pre><p class="fine">Temporary files expire automatically. Save what you need before leaving.</p></section>
+<section class="tools" aria-label="Tools included"><article><span class="tool-number">01 / SAVE</span><h3>Keep the original.</h3><p>Videos, Shorts, thumbnails and Instagram post images. No playlists or private-profile access.</p></article><article><span class="tool-number">02 / UNDERSTAND</span><h3>Get the details.</h3><p>Export source metadata as JSON. Pull available YouTube captions into readable text.</p></article><article><span class="tool-number">03 / CREATE</span><h3>Make it useful.</h3><p>Optional AI speech transcription and publishing metadata. Your API key, your usage limits.</p></article></section>
+<aside class="notice"><strong>A useful tool, not an access bypass.</strong><p>Public links can still be blocked by a platform. Stories require an authorized owner session. AI features may cost money and may be inaccurate. Respect copyright, privacy and platform terms.</p></aside>
+</main><footer><span>MEDIA WORKBENCH</span><span>Built for intentional use.</span></footer>
+</body></html>
