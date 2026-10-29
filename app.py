@@ -6,7 +6,7 @@ import yt_dlp
 from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, NoTranscriptFound
 
 app = Flask(__name__)
-CORS(app)  # CORS enable karta hai taakh frontend API call kar sake
+CORS(app)
 
 def get_yt_video_id(url):
     pattern = r'(?:v=|\/|youtu\.be\/|shorts\/)([a-zA-Z0-9_-]{11})'
@@ -17,7 +17,7 @@ def get_yt_video_id(url):
 def home():
     return jsonify({"status": "API is live and working!"})
 
-# 1. Video & Reel Downloader + Metadata Endpoint
+# Video & Reel Downloader + Metadata Endpoint
 @app.route('/api/fetch-info', methods=['POST'])
 def fetch_info():
     data = request.json
@@ -26,20 +26,23 @@ def fetch_info():
     if not url:
         return jsonify({"error": "URL required hai"}), 400
 
+    # YouTube aur Instagram ke liye behtar options
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
-        'format': 'best',
+        'format': 'bestvideo+bestaudio/best',
+        'noplaylist': True,
+        'extractor_args': {'youtube': {'player_client': ['android', 'web']}}
     }
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
             
-            # Format selection options
             formats = []
             if 'formats' in info:
-                for f in info['formats']:
+                for f in info.get('formats', []):
+                    # Sirf wese formats lein jisme video aur audio dono hon ya achi quality ho
                     if f.get('ext') == 'mp4' and f.get('vcodec') != 'none':
                         formats.append({
                             'format_id': f.get('format_id'),
@@ -56,14 +59,14 @@ def fetch_info():
                 "view_count": info.get('view_count'),
                 "tags": info.get('tags', []),
                 "direct_download_url": info.get('url'),
-                "formats": formats[:5] # Top formats
+                "formats": formats[-5:] if formats else [] # Last top formats
             }
             return jsonify({"success": True, "data": response_data})
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-# 2. YouTube Transcript Generator Endpoint
+# YouTube Transcript Generator Endpoint
 @app.route('/api/transcript', methods=['POST'])
 def get_transcript():
     data = request.json
