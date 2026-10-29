@@ -15,7 +15,6 @@ def get_yt_video_id(url):
     return match.group(1) if match else None
 
 def clean_url(url):
-    # Threads ya doosre platforms ke tracking parameters aur short links ko resolve karna
     if "threads.net" in url or "threads.com" in url:
         try:
             headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
@@ -41,14 +40,17 @@ def fetch_info():
 
     url = clean_url(raw_url)
 
+    # YouTube player extraction error ko fix karne ke liye updated clients
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
         'format': 'best[ext=mp4]/best',
         'noplaylist': True,
-        'socket_timeout': 20,
+        'socket_timeout': 25,
         'extractor_args': {
-            'youtube': {'player_client': ['android', 'web']}
+            'youtube': {
+                'player_client': ['mweb', 'ios', 'android']
+            }
         }
     }
 
