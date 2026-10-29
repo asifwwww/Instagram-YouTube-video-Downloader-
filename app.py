@@ -1,5 +1,6 @@
 import os
 import re
+import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import yt_dlp
@@ -13,6 +14,19 @@ def get_yt_video_id(url):
     match = re.search(pattern, url)
     return match.group(1) if match else None
 
+def clean_url(url):
+    # Threads ya doosre platforms ke tracking parameters aur short links ko resolve karna
+    if "threads.net" in url or "threads.com" in url:
+        try:
+            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+            resp = requests.get(url, headers=headers, allow_redirects=True, timeout=5)
+            url = resp.url.split('?')[0]
+        except Exception:
+            url = url.split('?')[0]
+    else:
+        url = url.split('?xmt=')[0].split('&')[0]
+    return url
+
 @app.route('/')
 def home():
     return jsonify({"status": "API is live and working!"})
@@ -20,21 +34,19 @@ def home():
 @app.route('/api/fetch-info', methods=['POST'])
 def fetch_info():
     data = request.json
-    url = data.get('url')
+    raw_url = data.get('url')
     
-    if not url:
+    if not raw_url:
         return jsonify({"success": False, "error": "URL required hai"}), 400
 
-    # Threads ya doosre links se unnecessary tracking parameters saaf karna
-    if "threads.net" in url:
-        url = url.split('?')[0]  # Query parameters hata deta hai
+    url = clean_url(raw_url)
 
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
         'format': 'best[ext=mp4]/best',
         'noplaylist': True,
-        'socket_timeout': 15,  # Timeout control karne ke liye
+        'socket_timeout': 20,
         'extractor_args': {
             'youtube': {'player_client': ['android', 'web']}
         }
@@ -68,7 +80,6 @@ def fetch_info():
             return jsonify({"success": True, "data": response_data})
 
     except Exception as e:
-        # Server crash hone ki bajaye ab sahi error message return hoga
         return jsonify({"success": False, "error": str(e)}), 200
 
 @app.route('/api/transcript', methods=['POST'])
