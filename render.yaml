@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: media-workbench
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /healthz
+    envVars:
+      - key: APP_TOKEN
+        generateValue: true
+      - key: ALLOW_PUBLIC
+        value: "false"
+      - key: MAX_FILE_MB
+        value: "80"
+      - key: MAX_DURATION_SECONDS
+        value: "900"
+      - key: MAX_DISK_MB
+        value: "350"
+      - key: FILE_TTL_SECONDS
+        value: "1800"
+      - key: JOB_TIMEOUT_SECONDS
+        value: "300"
