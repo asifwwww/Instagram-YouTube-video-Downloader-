@@ -25,13 +25,13 @@ def fetch_info():
     if not url:
         return jsonify({"error": "URL required hai"}), 400
 
-    # Universal options for YouTube, TikTok, FB, Insta, Twitter, etc.
+    # 'best[ext=mp4]/best' use karne se Facebook aur YouTube par video ke sath audio bhi lazmi milegi
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
-        'format': 'bestvideo+bestaudio/best',
+        'format': 'best[ext=mp4]/best',
         'noplaylist': True,
-        'extractor_args': {'youtube': {'player_client': ['android', 'web']}}
+        'extractor_args': {'youtube': {'player_client': ['ios', 'mweb', 'web']}}
     }
 
     try:
@@ -41,7 +41,7 @@ def fetch_info():
             formats = []
             if 'formats' in info:
                 for f in info.get('formats', []):
-                    if f.get('ext') == 'mp4' and f.get('vcodec') != 'none':
+                    if f.get('ext') == 'mp4' and f.get('vcodec') != 'none' and f.get('acodec') != 'none':
                         formats.append({
                             'format_id': f.get('format_id'),
                             'resolution': f.get('format_note') or f.get('resolution') or f"{f.get('height')}p",
