@@ -34,13 +34,16 @@ def fetch_info():
 
     url = clean_url(raw_url)
 
-    # Twitter/X aur baaki platforms ke liye format jo audio aur video dono sath laye
+    # Twitter aur baaki platforms ke liye flexible options
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
-        'format': 'best[ext=mp4]/bestvideo+bestaudio/best',
+        'format': 'best/bestvideo+bestaudio',
         'noplaylist': True,
-        'socket_timeout': 20,
+        'socket_timeout': 25,
+        'extractor_args': {
+            'twitter': {'api': ['graphql', 'syndication']}
+        }
     }
 
     try:
@@ -50,8 +53,7 @@ def fetch_info():
             formats = []
             if 'formats' in info:
                 for f in info.get('formats', []):
-                    # Sirf woh formats laye jis mein video aur audio dono mojood hon ya direct mp4 ho
-                    if f.get('url') and f.get('vcodec') != 'none' and f.get('acodec') != 'none':
+                    if f.get('url'):
                         formats.append({
                             'format_id': f.get('format_id'),
                             'resolution': f.get('format_note') or f.get('resolution') or f"{f.get('height')}p" if f.get('height') else 'HD',
@@ -59,7 +61,7 @@ def fetch_info():
                         })
 
             response_data = {
-                "title": info.get('title') or info.get('description') or "Social Media Media",
+                "title": info.get('title') or info.get('description') or "Media Download",
                 "description": info.get('description') or "",
                 "thumbnail": info.get('thumbnail') or "",
                 "uploader": info.get('uploader') or info.get('uploader_id') or "Creator",
@@ -70,7 +72,7 @@ def fetch_info():
             return jsonify({"success": True, "data": response_data})
 
     except Exception as e:
-        return jsonify({"success": False, "error": f"Extraction failed: {str(e)}"}), 200
+        return jsonify({"success": False, "error": f"Extraction failed: Tweet mein video nahi mili ya link private hai."}), 200
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
