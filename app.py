@@ -11,7 +11,7 @@ CORS(app)
 def clean_url(url):
     if "threads.net" in url or "threads.com" in url:
         try:
-            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+            headers = {"User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15"}
             resp = requests.get(url, headers=headers, allow_redirects=True, timeout=5)
             url = resp.url.split('?')[0]
         except Exception:
@@ -22,7 +22,7 @@ def clean_url(url):
 
 @app.route('/')
 def home():
-    return jsonify({"status": "Social Media Downloader API is live!"})
+    return jsonify({"status": "Social Downloader API is live!"})
 
 @app.route('/api/fetch-info', methods=['POST'])
 def fetch_info():
@@ -30,20 +30,18 @@ def fetch_info():
     raw_url = data.get('url')
     
     if not raw_url:
-        return jsonify({"success": False, "error": "URL required hai"}), 400
+        return jsonify({"success": False, "error": "URL required hai"}), 200
 
     url = clean_url(raw_url)
 
-    # Social platforms ke liye optimized headers aur options
+    # Instagram aur baaki platforms ke liye browser impersonation options
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
         'format': 'best[ext=mp4]/best',
         'noplaylist': True,
-        'socket_timeout': 20,
-        'http_headers': {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-        }
+        'socket_timeout': 25,
+        'impersonate': 'chrome',  # Instagram bot detection bypass karne ke liye zaroori hai
     }
 
     try:
@@ -72,8 +70,7 @@ def fetch_info():
             return jsonify({"success": True, "data": response_data})
 
     except Exception as e:
-        # Hamesha valid JSON error return karega taake unreadable response ka error na aaye
-        return jsonify({"success": False, "error": f"Extraction Error: {str(e)}"}), 200
+        return jsonify({"success": False, "error": f"Error: {str(e)}"}), 200
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
