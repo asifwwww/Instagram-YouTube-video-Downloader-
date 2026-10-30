@@ -34,11 +34,11 @@ def fetch_info():
 
     url = clean_url(raw_url)
 
-    # Saare platforms ke liye optimized options jo audio aur formats ko barkrar rakhein
+    # Audio aur video dono ko sath ensure karne ke liye strict format option
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
-        'format': 'best/bestvideo+bestaudio/best',
+        'format': 'best[height<=1080][vcodec!=none][acodec!=none]/best[vcodec!=none][acodec!=none]/best',
         'noplaylist': True,
         'socket_timeout': 25,
         'extractor_args': {
@@ -55,7 +55,8 @@ def fetch_info():
             if 'formats' in info:
                 for f in info.get('formats', []):
                     f_url = f.get('url')
-                    if f_url:
+                    # Sirf woh formats uthayein jismein audio aur video dono mojood hon
+                    if f_url and f.get('vcodec') != 'none' and f.get('acodec') != 'none':
                         formats.append({
                             'format_id': f.get('format_id'),
                             'resolution': f.get('format_note') or f.get('resolution') or f"{f.get('height')}p" if f.get('height') else 'HD',
@@ -65,16 +66,11 @@ def fetch_info():
             thumbnail = info.get('thumbnail') or ''
             direct_url = info.get('url')
             
-            # Agar direct url na ho lekin formats hon toh best format uthayein
             if not direct_url and formats:
                 direct_url = formats[-1]['url']
 
-            # Agar yeh image post ya thumbnail-only content ho
-            if not direct_url and thumbnail:
-                direct_url = thumbnail
-
             response_data = {
-                "title": info.get('title') or info.get('description') or "Social Media Media",
+                "title": info.get('title') or info.get('description') or "Social Media Video",
                 "description": info.get('description') or "",
                 "thumbnail": thumbnail,
                 "uploader": info.get('uploader') or info.get('uploader_id') or "Creator",
