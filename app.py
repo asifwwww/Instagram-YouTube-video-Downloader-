@@ -1,6 +1,5 @@
 import os
 import re
-import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import yt_dlp
@@ -14,44 +13,25 @@ def get_yt_video_id(url):
     match = re.search(pattern, url)
     return match.group(1) if match else None
 
-def clean_url(url):
-    if "threads.net" in url or "threads.com" in url:
-        try:
-            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
-            resp = requests.get(url, headers=headers, allow_redirects=True, timeout=5)
-            url = resp.url.split('?')[0]
-        except Exception:
-            url = url.split('?')[0]
-    else:
-        url = url.split('?xmt=')[0].split('&')[0]
-    return url
-
 @app.route('/')
 def home():
-    return jsonify({"status": "API is live and working!"})
+    return jsonify({"status": "All-in-One Media Downloader API is live!"})
 
 @app.route('/api/fetch-info', methods=['POST'])
 def fetch_info():
     data = request.json
-    raw_url = data.get('url')
+    url = data.get('url')
     
-    if not raw_url:
-        return jsonify({"success": False, "error": "URL required hai"}), 400
+    if not url:
+        return jsonify({"error": "URL required hai"}), 400
 
-    url = clean_url(raw_url)
-
-    # YouTube player extraction error ko fix karne ke liye updated clients
+    # 'best[ext=mp4]/best' use karne se Facebook aur YouTube par video ke sath audio bhi lazmi milegi
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
         'format': 'best[ext=mp4]/best',
         'noplaylist': True,
-        'socket_timeout': 25,
-        'extractor_args': {
-            'youtube': {
-                'player_client': ['mweb', 'ios', 'android']
-            }
-        }
+        'extractor_args': {'youtube': {'player_client': ['ios', 'mweb', 'web']}}
     }
 
     try:
@@ -61,7 +41,7 @@ def fetch_info():
             formats = []
             if 'formats' in info:
                 for f in info.get('formats', []):
-                    if f.get('ext') == 'mp4' and f.get('vcodec') != 'none':
+                    if f.get('ext') == 'mp4' and f.get('vcodec') != 'none' and f.get('acodec') != 'none':
                         formats.append({
                             'format_id': f.get('format_id'),
                             'resolution': f.get('format_note') or f.get('resolution') or f"{f.get('height')}p",
@@ -82,7 +62,7 @@ def fetch_info():
             return jsonify({"success": True, "data": response_data})
 
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 200
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/api/transcript', methods=['POST'])
 def get_transcript():
@@ -91,18 +71,18 @@ def get_transcript():
     
     video_id = get_yt_video_id(url) if url else None
     if not video_id:
-        return jsonify({"success": False, "error": "Valid YouTube Video URL required hai"}), 400
+        return jsonify({"error": "Valid YouTube Video URL required hai"}), 400
 
     try:
         transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
         full_text = " ".join([item['text'] for item in transcript_list])
         return jsonify({"success": True, "transcript": full_text})
     except TranscriptsDisabled:
-        return jsonify({"success": False, "error": "Is video par transcript/subtitles disabled hain."}), 200
+        return jsonify({"success": False, "error": "Is video par transcript/subtitles disabled hain."}), 400
     except NoTranscriptFound:
-        return jsonify({"success": False, "error": "Is video ki koi transcript nahi mili."}), 200
+        return jsonify({"success": False, "error": "Is video ki koi transcript nahi mili."}), 400
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 200
+        return jsonify({"success": False, "error": str(e)}), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
